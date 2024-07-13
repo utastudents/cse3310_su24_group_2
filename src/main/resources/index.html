@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Turn of Destiny</title>
+</head>
+<body>
+    <div id="waiting-room">
+        <p>Waiting for players...</p>
+        <button id="start-button">Start Game</button>
+    </div>
+    
+    <div id="game-container" style="display:none;">
+        <p id="stake"></p>
+        <div id="word-container"></div>
+        <div id="controls">
+            <button id="solve-button">Solve Puzzle</button>
+            <button id="buy-vowel-button">Buy Vowel</button>
+            <button id="select-consonant-button">Select Consonant</button>
+            <input type="text" id="solve-input" placeholder="Enter your solution here">
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://' + window.location.hostname + ':' + (parseInt(window.location.port) + 100));
+
+        socket.onopen = function() {
+            console.log('Connection opened');
+        };
+
+        socket.onmessage = function(event) {
+            console.log('Message received: ' + event.data);
+ 
+        };
+
+        socket.onclose = function() {
+            console.log('Connection closed');
+        };
+
+        function sendMessage(message) {
+            socket.send(message);
+        }
+
+        function startGame() {
+            sendMessage('start');
+        }
+
+        document.getElementById('start-button').addEventListener('click', startGame);
+    </script>
+</body>
+</html>
+
