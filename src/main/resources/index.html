@@ -29,7 +29,15 @@
 
         socket.onmessage = function(event) {
             console.log('Message received: ' + event.data);
- 
+//edit later to handle message to
+            const data = JSON.parse(event.data);
+            if (data.type === 'startGame') {
+                document.getElementById('waiting-room').style.display = 'none';
+                document.getElementById('game-container').style.display = 'block';
+                document.getElementById('stake').innerText = 'Stake: ' + data.stake;
+                
+                document.getElementById('word-container').innerHTML = data.words.map(word => '_'.repeat(word.length)).join(' ');
+            }
         };
 
         socket.onclose = function() {
@@ -41,7 +49,7 @@
         }
 
         function startGame() {
-            sendMessage('start');
+            sendMessage(JSON.stringify({ type: 'startGame' }));
         }
 
         document.getElementById('start-button').addEventListener('click', startGame);

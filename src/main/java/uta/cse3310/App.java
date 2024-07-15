@@ -5,9 +5,9 @@ public class App {
         int httpPort = Integer.parseInt(System.getenv().getOrDefault("HTTP_PORT", "9180"));
         int websocketPort = httpPort + 100;
 
-        Game game = new Game();
-        WebSocket webSocketServer = new WebSocket(websocketPort, game);
-
-
+        GameSession gameSession = new GameSession(); 
+        WebSocketHandler webSocketServer = new WebSocketHandler(websocketPort);
+        webSocketServer.start();
     }
 }
+
