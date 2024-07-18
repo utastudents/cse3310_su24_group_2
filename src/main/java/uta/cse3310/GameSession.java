@@ -13,13 +13,25 @@ public class GameSession {
     }
 
     public void addPlayer(Player player) {
-        players.add(player);
+        if (!isActive) {
+            players.add(player);
+        }
     }
 
     public void removePlayer(Player player) {
         players.remove(player);
     }
 
-//We will add more methods as we go on
+    public void startGame() {
+        if (players.size() > 1) {
+            isActive = true;
+            // will add more game start logic
+        }
+    }
+
+    public void endGame() {
+        isActive = false;
+            // will add more game ending logic
+    }
 }
 

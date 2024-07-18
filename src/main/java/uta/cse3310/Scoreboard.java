@@ -1,6 +1,7 @@
 package uta.cse3310;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Scoreboard {
@@ -11,11 +12,15 @@ public class Scoreboard {
     }
 
     public void updateScoreboard(Player player) {
-        // This should handle high scores and update to players
+        highScores.add(player);
+        highScores.sort(Comparator.comparingInt(Player::getScore).reversed());
+        if (highScores.size() > 10) {
+            highScores = highScores.subList(0, 10);
+        }
     }
 
     public List<Player> getTopPlayers() {
-        return highScores;
+        return new ArrayList<>(highScores);
     }
 }
 

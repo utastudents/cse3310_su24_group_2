@@ -18,21 +18,21 @@ public class GameServer {
     public void start() {
         webSocketHandler.start();
     }
-
+        //  will start the server
     public void stop() {
-
+        // this will stop the server
     }
 
     public void createGameSession(int numberOfPlayers) {
-
+        //to create a game session
     }
 
     public void removeGameSession(GameSession session) {
-       
+        // to remove a game session
     }
 
     public void updateScoreboard(Player player) {
-
+        scoreboard.updateScoreboard(player);
     }
 }
 

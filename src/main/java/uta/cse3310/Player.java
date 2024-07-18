@@ -28,6 +28,11 @@ public class Player {
     public void setOnlineStatus(boolean status) {
         this.isOnline = status;
     }
+
+    public int getScore() {
+        return score;
+    }
 }
+
 
 //This shoudl handle players joining and leabing the game along with their current online status

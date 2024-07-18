@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Turn of Destiny</title>
 </head>
 <body>
     <div id="waiting-room">
-        <p>Waiting for players...</p>
+        <p>Waiting for players to join....</p>
         <button id="start-button">Start Game</button>
     </div>
     
@@ -29,7 +30,6 @@
 
         socket.onmessage = function(event) {
             console.log('Message received: ' + event.data);
-//edit later to handle message to
             const data = JSON.parse(event.data);
             if (data.type === 'startGame') {
                 document.getElementById('waiting-room').style.display = 'none';
