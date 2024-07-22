@@ -1,12 +1,17 @@
 package uta.cse3310;
 
+import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler extends WebSocketServer {
+
+    private static Set<WebSocket> conns = Collections.newSetFromMap(new ConcurrentHashMap<WebSocket, Boolean>());
 
     public WebSocketHandler(int port) {
         super(new InetSocketAddress(port));
@@ -14,35 +19,36 @@ public class WebSocketHandler extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("New connection: " + conn.getRemoteSocketAddress());
+        conns.add(conn);
+        System.out.println("New connection from " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("Closed connection: " + conn.getRemoteSocketAddress() + " with exit code " + code + " additional info: " + reason);
+        conns.remove(conn);
+        System.out.println("Closed connection to " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("Received message from " + conn.getRemoteSocketAddress() + ": " + message);
-        conn.send("Message received: " + message);
+        // Broadcast message to all connected clients
+        for (WebSocket sock : conns) {
+            sock.send(message);
+        }
+        System.out.println("Message from " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + ": " + message);
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.err.println("Error connecting " + conn.getRemoteSocketAddress() + ": " + ex);
+        ex.printStackTrace();
+        if (conn != null) {
+            conns.remove(conn);
+        }
     }
 
     @Override
     public void onStart() {
-        System.out.println("The WebSocket server has started successfully on port " + getPort());
-    }
-
-    public static void main(String[] args) {
-        int port = 9080; 
-        WebSocketHandler server = new WebSocketHandler(port);
-        server.start();
-        System.out.println("WebSocket server started on port " + port);
+        System.out.println("The WebSocket server started successfully.");
     }
 }
 
