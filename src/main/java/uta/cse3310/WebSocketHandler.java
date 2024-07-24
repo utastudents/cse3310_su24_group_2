@@ -33,7 +33,12 @@ public class WebSocketHandler extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         // Broadcast message to all connected clients
         for (WebSocket sock : conns) {
-            sock.send(message);
+            try {
+                sock.send(message);
+            } catch (Exception e) {
+                System.err.println("Error sending message to " + sock.getRemoteSocketAddress().getAddress().getHostAddress());
+                e.printStackTrace();
+            }
         }
         System.out.println("Message from " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + ": " + message);
     }
@@ -51,4 +56,3 @@ public class WebSocketHandler extends WebSocketServer {
         System.out.println("The WebSocket server started successfully.");
     }
 }
-
