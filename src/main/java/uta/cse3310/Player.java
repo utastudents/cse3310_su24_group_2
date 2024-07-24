@@ -35,4 +35,4 @@ public class Player {
 }
 
 
-//This shoudl handle players joining and leabing the game along with their current online status
+//This should handle players joining and leaving the game along with their current online status.

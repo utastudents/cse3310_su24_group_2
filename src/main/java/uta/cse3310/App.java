@@ -23,7 +23,7 @@ public class App {
         int websocketPort = httpPort + 100;
 
         // This starts the HTTP server
-        try {
+    /*    try {
             HttpServer httpServer = HttpServer.create(new InetSocketAddress(httpPort), 0);
             httpServer.createContext("/", new HttpHandler() {
                 @Override
@@ -39,7 +39,7 @@ public class App {
             System.out.println("HTTP server started on port " + httpPort);
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
         // starts the WebSocket server
         WebSocketHandler webSocketServer = new WebSocketHandler(websocketPort);
