@@ -1,3 +1,5 @@
+//Handles WebSocket connections and messages, comp error when class name is just websocket.java
+
 package uta.cse3310;
 
 import org.java_websocket.server.WebSocketServer;

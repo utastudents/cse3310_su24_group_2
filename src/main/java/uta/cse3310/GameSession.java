@@ -1,3 +1,5 @@
+// GameSession manags a single game; players, rounds
+
 package uta.cse3310;
 
 import java.util.ArrayList;

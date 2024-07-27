@@ -1,3 +1,4 @@
+//GameServer controls the  server; sessions and scores.
 package uta.cse3310;
 
 import java.util.List;

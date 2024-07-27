@@ -1,3 +1,4 @@
+//Scoreboard.java keeps track of player scores.
 package uta.cse3310;
 
 import java.util.ArrayList;

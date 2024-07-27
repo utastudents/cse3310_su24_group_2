@@ -1,3 +1,4 @@
+//Manages word puzzles, randomness etc
 package uta.cse3310;
 
 import java.io.IOException;

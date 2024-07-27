@@ -1,3 +1,4 @@
+//App.java starts the HTTP and WebSocket servers.
 package uta.cse3310;
 
 public class App {

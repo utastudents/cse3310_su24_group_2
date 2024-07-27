@@ -1,3 +1,4 @@
+//Player.java reps a player; their score and status online or not
 package uta.cse3310;
 
 public class Player {
