@@ -38,7 +38,7 @@ public class GameSession {
     }
 
     private void startRound() {
-        currentPuzzle.generatePuzzle(2); // Example: generate a puzzle with 2 words
+        currentPuzzle.generatePuzzle(2);
         currentTurnIndex = 0;
         // Notify all players about the new round
     }
