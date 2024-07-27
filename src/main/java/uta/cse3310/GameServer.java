@@ -1,6 +1,7 @@
 package uta.cse3310;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class GameServer {
     private int httpPort;
@@ -12,27 +13,34 @@ public class GameServer {
     public GameServer(int httpPort, int wsPort) {
         this.httpPort = httpPort;
         this.wsPort = wsPort;
+        this.gameSessions = new ArrayList<>();
+        this.scoreboard = new Scoreboard();
         this.webSocketHandler = new WebSocketHandler(wsPort);
     }
 
     public void start() {
         webSocketHandler.start();
     }
-        //  will start the server
+
     public void stop() {
-        // this will stop the server
+        // to stop the server
     }
 
     public void createGameSession(int numberOfPlayers) {
-        //to create a game session
+        GameSession session = new GameSession();
+        gameSessions.add(session);
     }
 
     public void removeGameSession(GameSession session) {
-        // to remove a game session
+        gameSessions.remove(session);
     }
 
     public void updateScoreboard(Player player) {
         scoreboard.updateScoreboard(player);
+    }
+
+    public List<Player> getTopPlayers() {
+        return scoreboard.getTopPlayers();
     }
 }
 

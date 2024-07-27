@@ -31,16 +31,16 @@ public class WebSocketHandler extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        // Broadcast message to all connected clients
+        System.out.println("Message from " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + ": " + message);
+
         for (WebSocket sock : conns) {
             sock.send(message);
         }
-        System.out.println("Message from " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + ": " + message);
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        ex.printStackTrace();
+        System.err.println("Error occurred: " + ex.getMessage());
         if (conn != null) {
             conns.remove(conn);
         }
@@ -48,7 +48,7 @@ public class WebSocketHandler extends WebSocketServer {
 
     @Override
     public void onStart() {
-        System.out.println("The WebSocket server started successfully.");
+        System.out.println("WebSocket server started successfully.");
     }
 }
 

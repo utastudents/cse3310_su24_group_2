@@ -18,6 +18,7 @@ public class WordPuzzle {
         words = new ArrayList<>();
         revealedLetters = new ArrayList<>();
         displayedPuzzle = "";
+        loadWords("src/main/resources/words.txt"); // Load words from file
     }
 
     public void loadWords(String filePath) {
@@ -54,7 +55,12 @@ public class WordPuzzle {
         return guessedWords.stream().allMatch(words::contains);
     }
 
-    // Future enhancement: Modify generatePuzzle to select meaningful phrases instead of random words
+    public String getDisplayedPuzzle() {
+        return displayedPuzzle;
+    }
+
+    public List<Character> getRevealedLetters() {
+        return revealedLetters;
+    }
 }
 
-//This should handle game play rules

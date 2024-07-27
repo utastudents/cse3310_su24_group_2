@@ -32,7 +32,13 @@ public class Player {
     public int getScore() {
         return score;
     }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public String getName() {
+        return name;
+    }
 }
 
-
-//This shoudl handle players joining and leabing the game along with their current online status
