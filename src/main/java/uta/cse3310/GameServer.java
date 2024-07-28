@@ -16,7 +16,7 @@ public class GameServer {
         this.wsPort = wsPort;
         this.gameSessions = new ArrayList<>();
         this.scoreboard = new Scoreboard();
-        this.webSocketHandler = new WebSocketHandler(wsPort);
+        this.webSocketHandler = new WebSocketHandler(wsPort, this);
     }
 
     public void start() {
@@ -42,6 +42,10 @@ public class GameServer {
 
     public List<Player> getTopPlayers() {
         return scoreboard.getTopPlayers();
+    }
+
+    public List<GameSession> getGameSessions() {
+        return gameSessions;
     }
 }
 

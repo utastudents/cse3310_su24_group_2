@@ -1,6 +1,8 @@
 //Player.java reps a player; their score and status online or not
 package uta.cse3310;
 
+import java.util.List;
+
 public class Player {
     private String playerId;
     private String name;
@@ -40,6 +42,14 @@ public class Player {
 
     public String getName() {
         return name;
+    }
+
+    public void updatePuzzle(String puzzle) {
+        // send the updated puzzle to the player
+    }
+
+    public void updateScoreboard(List<Player> topPlayers) {
+        // send the updated scoreboard to players
     }
 }
 

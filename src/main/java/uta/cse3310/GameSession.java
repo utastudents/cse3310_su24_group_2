@@ -1,5 +1,4 @@
-// GameSession manags a single game; players, rounds
-
+// GameSession manags a single game; players, rounds scoreboard
 package uta.cse3310;
 
 import java.util.ArrayList;
@@ -43,6 +42,7 @@ public class GameSession {
         currentPuzzle.generatePuzzle(2);
         currentTurnIndex = 0;
         // Notify all players about the new round
+        notifyPlayers();
     }
 
     public void endRound() {
@@ -74,6 +74,14 @@ public class GameSession {
 
     public Scoreboard getScoreboard() {
         return scoreboard;
+    }
+
+    private void notifyPlayers() {
+        // Notify all players about the current puzzle and game state
+        for (Player player : players) {
+            player.updatePuzzle(currentPuzzle.getDisplayedPuzzle());
+            player.updateScoreboard(scoreboard.getTopPlayers());
+        }
     }
 }
 

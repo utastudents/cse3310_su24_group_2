@@ -26,7 +26,6 @@
             <version>1.5.4</version>
         </dependency>
         
-
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -39,6 +38,11 @@
             <version>2.6</version>
         </dependency>
         
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20210307</version>
+        </dependency>
 
     </dependencies>
     

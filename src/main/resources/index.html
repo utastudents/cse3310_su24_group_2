@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turn of Destiny</title>
+    <title>TURN OF DESTINY</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,7 +47,7 @@
 <body>
     <div id="game-container">
         <h1>Turn of Destiny</h1>
-        <div id="puzzle"></div>
+        <div id="puzzle">Loading puzzle...</div>
         <div id="controls">
             <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
             <button onclick="sendUserAction('SELECT_CONSONANT', '')">Select Consonant</button>
@@ -65,7 +65,7 @@
 
         function updateScoreboard(scores) {
             let scoreboard = document.getElementById('scoreboard');
-            scoreboard.innerHTML = '';
+            scoreboard.innerHTML = 'Scoreboard:<br>';
             scores.forEach(score => {
                 let item = document.createElement('div');
                 item.textContent = `${score.player}: ${score.points}`;
@@ -83,7 +83,10 @@
         }
 
         // Initialize WebSocket and handle messages
-        let socket = new WebSocket('ws://localhost:9081'); // Update if needed
+        let socket = new WebSocket('ws://localhost:9180'); // Update if needed
+        socket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
         socket.onmessage = function(event) {
             let data = JSON.parse(event.data);
             if (data.puzzle) {
@@ -92,6 +95,12 @@
             if (data.scores) {
                 updateScoreboard(data.scores);
             }
+        };
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
         };
     </script>
 </body>
