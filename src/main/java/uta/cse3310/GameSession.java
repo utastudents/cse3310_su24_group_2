@@ -22,11 +22,8 @@ public class GameSession {
     }
 
     public void addPlayer(Player player) {
-        if (players.size() <= 4) {
-            players.add(player);
-        } else {
-            throw new IllegalStateException("Maximum number of players reached.");
-        }
+        players.add(player);
+        System.out.println("Added player with ID: " + player.getPlayerId() + " and Name: " + player.getName());
     }
 
     public void startGame() {
@@ -58,5 +55,10 @@ public class GameSession {
         } else {
             // Start new round
         }
+    }
+
+    public void removePlayer(Player player) {
+        players.remove(player);
+        System.out.println("Removed player with ID: " + player.getPlayerId() + " and Name: " + player.getName());
     }
 }
