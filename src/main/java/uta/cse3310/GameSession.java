@@ -22,6 +22,10 @@ public class GameSession {
         this.scoreboard = new Scoreboard();
     }
 
+    public GameSession(int numberOfPlayers) {
+        //TODO Auto-generated constructor stub
+    }
+
     public void addPlayer(Player player) {
         if (!isActive) {
             players.add(player);

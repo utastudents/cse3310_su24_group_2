@@ -12,7 +12,7 @@ public class Scoreboard {
         highScores = new ArrayList<>();
     }
 
-    public void updateScoreboard(Player player) {
+    public void updateScore(String PlayerId, int points) {
         highScores.add(player);
         highScores.sort(Comparator.comparingInt(Player::getScore).reversed());
         if (highScores.size() > 10) {

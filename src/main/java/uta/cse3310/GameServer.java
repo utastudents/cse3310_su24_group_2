@@ -1,8 +1,8 @@
 //GameServer controls the  server; sessions and scores.
 package uta.cse3310;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GameServer {
     private int httpPort;
@@ -20,28 +20,43 @@ public class GameServer {
     }
 
     public void start() {
+        try{
         webSocketHandler.start();
-    }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }   
+     }
 
-    public void stop() {
-        // to stop the server
+     public void stop() {
+        try {
+            webSocketHandler.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Handle the exception, perhaps by logging it or notifying the user
+        }
     }
-
     public void createGameSession(int numberOfPlayers) {
-        GameSession session = new GameSession();
-        gameSessions.add(session);
+        if (numberOfPlayers >= 2 && numberOfPlayers <= 4) {
+            GameSession session = new GameSession(numberOfPlayers);
+            gameSessions.add(session);
+            // Notify WebSocket clients of the new session
+            webSocketHandler.broadcast("New session created with " + numberOfPlayers + " players.");
+        } else {
+            throw new IllegalArgumentException("Number of players must be between 2 and 4.");
+        }
     }
 
     public void removeGameSession(GameSession session) {
         gameSessions.remove(session);
+        // Notify WebSocket clients of the session removal
+        webSocketHandler.broadcast("Session removed.");
     }
 
-    public void updateScoreboard(Player player) {
-        scoreboard.updateScoreboard(player);
+    public void updateScoreboard(Player player, int points) {
+        scoreboard.updateScore(player.getPlayerId(), points);
     }
 
     public List<Player> getTopPlayers() {
         return scoreboard.getTopPlayers();
     }
 }
-
