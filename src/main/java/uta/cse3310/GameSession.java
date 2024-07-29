@@ -15,7 +15,7 @@ public class GameSession {
         this.players = new ArrayList<>();
         this.currentPlayerIndex = 0;
         this.rounds = 0;
-        this.wordPuzzle = new WordPuzzle();
+        this.wordPuzzle = new WordPuzzle("src/main/resources/words.txt", 6);
         for (int i = 0; i < numberOfPlayers; i++) {
             players.add(new Player("Player " + (i + 1)));
         }
@@ -28,7 +28,8 @@ public class GameSession {
 
     public void startGame() {
         // Initialize game logic
-        wordPuzzle.selectWords();
+        wordPuzzle.selectWords(3);
+        System.out.println("Game started with puzzle: " + wordPuzzle.getDisplayedPuzzle());
     }
 
     public void nextTurn() {
