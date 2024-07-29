@@ -8,24 +8,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class WordPuzzle {
     private List<String> words;
-    private List<Character> revealedLetters;
     private String displayedPuzzle;
+    private String currentPuzzle;
 
     public WordPuzzle() {
         words = new ArrayList<>();
-        revealedLetters = new ArrayList<>();
         displayedPuzzle = "";
-        loadWords("src/main/resources/words.txt"); // Load words from file
+        currentPuzzle = "";
+        loadWords("src/main/resources/words.txt");
     }
 
     public void loadWords(String filePath) {
-        try (Stream<String> stream = Files.lines(Paths.get(filePath))) {
-            words = stream
-                .filter(word -> word.length() >= 3 && word.matches("[a-z]+"))
+        try {
+            words = Files.lines(Paths.get(filePath))
+                .filter(word -> word.length() >= 3 && word.matches("^[a-z]+$"))
                 .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,31 +37,32 @@ public class WordPuzzle {
         for (int i = 0; i < numberOfWords; i++) {
             selectedWords.add(words.get(random.nextInt(words.size())));
         }
-        displayedPuzzle = String.join(" ", selectedWords);
+        currentPuzzle = String.join(" ", selectedWords);
+        displayedPuzzle = currentPuzzle.replaceAll("[a-z]", "_");
     }
 
     public boolean revealLetter(char letter) {
         boolean revealed = false;
-        for (int i = 0; i < displayedPuzzle.length(); i++) {
-            if (displayedPuzzle.charAt(i) == letter) {
-                revealedLetters.add(letter);
+        StringBuilder newDisplayed = new StringBuilder(displayedPuzzle);
+        for (int i = 0; i < currentPuzzle.length(); i++) {
+            if (Character.toLowerCase(currentPuzzle.charAt(i)) == Character.toLowerCase(letter) && displayedPuzzle.charAt(i) == '_') {
+                newDisplayed.setCharAt(i, currentPuzzle.charAt(i));
                 revealed = true;
             }
         }
+        displayedPuzzle = newDisplayed.toString();
         return revealed;
     }
 
-    public boolean checkSolved(List<String> guessedWords) {
-        String currentPuzzle = getDisplayedPuzzle().replaceAll("[^a-zA-Z ]", "").toLowerCase();
-        String guessedPuzzle = String.join(" ", guessedWords).toLowerCase();
-        return currentPuzzle.equals(guessedPuzzle);
+    public boolean checkSolved(String guess) {
+        return guess.equalsIgnoreCase(currentPuzzle);
     }
 
     public String getDisplayedPuzzle() {
         return displayedPuzzle;
     }
 
-    public List<Character> getRevealedLetters() {
-        return revealedLetters;
+    public String getCurrentPuzzle() {
+        return currentPuzzle;
     }
 }

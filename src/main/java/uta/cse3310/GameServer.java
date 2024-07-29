@@ -24,7 +24,7 @@ public class GameServer {
     }
 
     public void stop() {
-        // to stop the server
+
     }
 
     public GameSession findOrCreateGameSession() {
@@ -76,5 +76,9 @@ public class GameServer {
                 session.removePlayer(playerToRemove);
             }
         }
+    }
+
+    public int getPlayerCount() {
+        return gameSessions.stream().mapToInt(session -> session.getPlayers().size()).sum();
     }
 }

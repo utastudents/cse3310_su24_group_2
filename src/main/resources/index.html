@@ -5,34 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TURN OF DESTINY</title>
     <style>
-        /* ... (keep existing styles) ... */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        #game-container {
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #puzzle {
+            font-size: 24px;
+            margin: 20px 0;
+            word-wrap: break-word;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        #controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 5px;
+        }
+        #scoreboard, #current-player, #current-stake, #round, #latency, #player-info, #game-status, #feedback {
+            margin: 10px 0;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group input {
+            margin-right: 5px;
+        }
+        #feedback {
+            color: red;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>Turn of Destiny</h1>
-        <div id="puzzle">Loading puzzle...</div>
+        <div id="player-info"></div>
+        <div id="game-status"></div>
+        <div id="puzzle">Loading</div>
         <div id="controls">
             <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
-            <button onclick="selectConsonant()">Select Consonant</button>
-            <button onclick="attemptSolve()">Solve Puzzle</button>
+            <div class="input-group">
+                <input type="text" id="consonant-input" maxlength="1" placeholder="Enter consonant">
+                <button onclick="selectConsonant()">Select Consonant</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="solve-input" placeholder="Enter solution">
+                <button onclick="attemptSolve()">Solve Puzzle</button>
+            </div>
         </div>
+        <div id="feedback"></div>
         <div id="scoreboard">Scoreboard </div>
         <div id="current-player"></div>
+        <div id="current-stake"></div>
+        <div id="round"></div>
+        <div id="latency"> Latency: -- ms</div>
     </div>
 
     <script>
-        let socket = new WebSocket('ws://localhost:9180'); // Update if needed
+        let socket = new WebSocket('ws://localhost:9180');
         let playerId = null;
+        let playerName = null;
+        let latencies = [];
 
         socket.onopen = function() {
             console.log('WebSocket connection established');
+            socket.send(JSON.stringify({Action: "JOIN_GAME"}));
+            console.log('Sent JOIN_GAME action');
         };
 
         socket.onmessage = function(event) {
+            console.log('Received message:', event.data);
             let data = JSON.parse(event.data);
+            
+            if (data.Action === "PLAYER_INFO") {
+                playerId = data.PlayerId;
+                playerName = data.PlayerName;
+                document.getElementById('player-info').textContent = `You are ${playerName}`;
+                console.log('Received PLAYER_INFO:', playerName, playerId);
+            } else {
+                console.log('Updating game state:', data);
+                updateGameState(data);
+                updateLatency();
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            showFeedback('Connection error. Please refresh the page.');
+        };
+
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+            showFeedback('Connection closed. Please refresh the page.');
+        };
+
+        function updateGameState(data) {
+            console.log('Updating game state with:', data);
             if (data.puzzle) {
-                updateWordPuzzle(data.puzzle);
+                document.getElementById('puzzle').textContent = data.puzzle;
             }
             if (data.scores) {
                 updateScoreboard(data.scores);
@@ -40,18 +121,17 @@
             if (data.currentPlayer) {
                 updateCurrentPlayer(data.currentPlayer);
             }
-        };
-
-        socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-        };
-
-        socket.onclose = function() {
-            console.log('WebSocket connection closed');
-        };
-
-        function updateWordPuzzle(puzzle) {
-            document.getElementById('puzzle').textContent = puzzle;
+            if (data.currentStake) {
+                document.getElementById('current-stake').textContent = `Current Stake: $${data.currentStake}`;
+            }
+            if (data.round) {
+                document.getElementById('round').textContent = `Round: ${data.round}`;
+            }
+            if (data.gameStatus) {
+                document.getElementById('game-status').textContent = data.gameStatus;
+            }
+            
+            enableControls(data.currentPlayer === playerId);
         }
 
         function updateScoreboard(scores) {
@@ -59,7 +139,8 @@
             scoreboard.innerHTML = 'Scoreboard:<br>';
             scores.forEach(score => {
                 let item = document.createElement('div');
-                item.textContent = `${score.name}: ${score.score}`;
+                item.textContent = `${score.name}: $${score.score}`;
+                item.dataset.playerId = score.playerId;
                 scoreboard.appendChild(item);
             });
         }
@@ -70,16 +151,23 @@
                 currentPlayerDiv.textContent = "It's your turn!";
                 enableControls(true);
             } else {
-                currentPlayerDiv.textContent = "Waiting for other player...";
+                let currentPlayerName = "Another player";
+                for (let score of document.getElementById('scoreboard').children) {
+                    if (score.dataset.playerId === currentPlayerId) {
+                        currentPlayerName = score.textContent.split(':')[0];
+                        break;
+                    }
+                }
+                currentPlayerDiv.textContent = `Waiting for ${currentPlayerName}'s turn...`;
                 enableControls(false);
             }
         }
 
         function enableControls(enable) {
             let buttons = document.querySelectorAll('#controls button');
-            buttons.forEach(button => {
-                button.disabled = !enable;
-            });
+            let inputs = document.querySelectorAll('#controls input');
+            buttons.forEach(button => button.disabled = !enable);
+            inputs.forEach(input => input.disabled = !enable);
         }
 
         function sendUserAction(action, guess) {
@@ -88,23 +176,41 @@
                 Guess: guess,
                 PlayerId: playerId
             };
+            console.log('Sending user action:', userAction);
             socket.send(JSON.stringify(userAction));
         }
 
         function selectConsonant() {
-            let consonant = prompt("Enter a consonant:");
-            if (consonant && consonant.length === 1 && consonant.match(/[bcdfghjklmnpqrstvwxyz]/i)) {
-                sendUserAction('SELECT_CONSONANT', consonant.toUpperCase());
+            let consonant = document.getElementById('consonant-input').value.toUpperCase();
+            if (consonant && consonant.length === 1 && consonant.match(/[BCDFGHJKLMNPQRSTVWXYZ]/)) {
+                sendUserAction('SELECT_CONSONANT', consonant);
+                document.getElementById('consonant-input').value = '';
+                showFeedback('');
             } else {
-                alert("Please enter a valid consonant.");
+                showFeedback("Please enter a valid consonant.");
             }
         }
 
         function attemptSolve() {
-            let guess = prompt("Enter your solution:");
+            let guess = document.getElementById('solve-input').value.toUpperCase();
             if (guess) {
-                sendUserAction('SOLVE', guess.toUpperCase());
+                sendUserAction('SOLVE', guess);
+                document.getElementById('solve-input').value = '';
+                showFeedback('');
+            } else {
+                showFeedback("Please enter a solution to guess.");
             }
+        }
+
+        function updateLatency() {
+            if (latencies.length > 0) {
+                let avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+                document.getElementById('latency').textContent = `Average Latency: ${avgLatency.toFixed(2)} ms`;
+            }
+        }
+
+        function showFeedback(message) {
+            document.getElementById('feedback').textContent = message;
         }
     </script>
 </body>

@@ -21,7 +21,7 @@ public class Player {
     }
 
     public void leaveGame(GameSession session) {
-        session.removePlayer(this);
+        
     }
 
     public void updateScore(int points) {
@@ -45,11 +45,10 @@ public class Player {
     }
 
     public void updatePuzzle(String puzzle) {
-        // send the updated puzzle to the player
+        // to send the update puzzle to  player
     }
 
     public void updateScoreboard(List<Player> topPlayers) {
-        // send the updated scoreboard to players
+        // to send the updated scoreboard to players
     }
 }
-

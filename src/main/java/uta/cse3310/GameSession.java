@@ -1,8 +1,10 @@
+
+
 package uta.cse3310;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
+import java.util.Random;
 
 public class GameSession {
     private List<Player> players;
@@ -10,7 +12,9 @@ public class GameSession {
     private WordPuzzle currentPuzzle;
     private int currentTurnIndex;
     private int round;
-    private Scoreboard scoreboard;
+    private int currentStake;
+    private static final int VOWEL_COST = 250;
+    private static final int[] STAKES = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 0, -1}; 
 
     public GameSession() {
         this.players = new ArrayList<>();
@@ -18,13 +22,12 @@ public class GameSession {
         this.currentPuzzle = new WordPuzzle();
         this.currentTurnIndex = 0;
         this.round = 1;
-        this.scoreboard = new Scoreboard();
     }
 
     public void addPlayer(Player player) {
-        if (!isActive) {
+        if (!isActive && players.size() < 4) {
             players.add(player);
-            if (players.size() >= 2 && players.size() <= 4) {
+            if (players.size() >= 2) {
                 startGame();
             }
         }
@@ -38,7 +41,7 @@ public class GameSession {
     }
 
     public void startGame() {
-        if (players.size() >= 2 && players.size() <= 4) {
+        if (!isActive && players.size() >= 2) {
             isActive = true;
             startRound();
         }
@@ -47,10 +50,62 @@ public class GameSession {
     private void startRound() {
         currentPuzzle.generatePuzzle(2);
         currentTurnIndex = 0;
+        selectStake();
         notifyPlayers();
     }
 
-    public void endRound() {
+    private void selectStake() {
+        Random random = new Random();
+        currentStake = STAKES[random.nextInt(STAKES.length)];
+    }
+
+    public void buyVowel(String playerId) {
+        Player player = getCurrentPlayer();
+        if (player.getPlayerId().equals(playerId) && player.getScore() >= VOWEL_COST) {
+            player.updateScore(-VOWEL_COST);
+            // Logic to let the player choose a vowel and reveal it
+            String vowels = "aeiou";
+            char vowel = vowels.charAt(new Random().nextInt(vowels.length()));
+            if (currentPuzzle.revealLetter(vowel)) {
+
+            } else {
+                nextTurn();
+            }
+        }
+    }
+
+    public void selectConsonant(String playerId, String consonant) {
+        Player player = getCurrentPlayer();
+        if (player.getPlayerId().equals(playerId)) {
+            if (currentPuzzle.revealLetter(consonant.charAt(0))) {
+                int occurrences = countOccurrences(currentPuzzle.getDisplayedPuzzle(), consonant.charAt(0));
+                player.updateScore(currentStake * occurrences);
+                // Keep the turn
+            } else {
+                nextTurn();
+            }
+        }
+    }
+
+    public void attemptSolve(String playerId, String guess) {
+        Player player = getCurrentPlayer();
+        if (player.getPlayerId().equals(playerId)) {
+            if (currentPuzzle.checkSolved(guess)) {
+                player.updateScore(1000); // Bonus for solving
+                endRound();
+            } else {
+                nextTurn();
+            }
+        }
+    }
+
+    private void nextTurn() {
+        currentTurnIndex = (currentTurnIndex + 1) % players.size();
+        selectStake();
+        notifyPlayers();
+    }
+
+    private void endRound() {
         round++;
         if (round > 3) {
             endGame();
@@ -59,14 +114,22 @@ public class GameSession {
         }
     }
 
-    public void endGame() {
+    private void endGame() {
         isActive = false;
-        // Update scoreboard and notify players
+        Player winner = determineWinner();
+        // Notify players of the winner
     }
 
-    public void nextTurn() {
-        currentTurnIndex = (currentTurnIndex + 1) % players.size();
-        notifyPlayers();
+    private Player determineWinner() {
+        return players.stream().max((p1, p2) -> p1.getScore() - p2.getScore()).orElse(null);
+    }
+
+    private int countOccurrences(String str, char ch) {
+        return (int) str.chars().filter(c -> c == ch).count();
+    }
+
+    private void notifyPlayers() {
+        // This  will be called by WebSocketHandler(websocket) to send updates to players
     }
 
     public Player getCurrentPlayer() {
@@ -77,58 +140,23 @@ public class GameSession {
         return currentPuzzle;
     }
 
-    public Scoreboard getScoreboard() {
-        return scoreboard;
+    public int getCurrentStake() {
+        return currentStake;
     }
 
-    private void notifyPlayers() {
-        // This method will be called by WebSocketHandler to send updates to players
-    }
-
-    public void buyVowel(String playerId) {
-        Player player = findPlayerById(playerId);
-        if (player != null && player == getCurrentPlayer()) {
-            if (player.getScore() >= 250) {
-                player.updateScore(-250);
-                // Logic to reveal a vowel
-                nextTurn();
-            }
-        }
-    }
-
-    public void selectConsonant(String playerId, String consonant) {
-        Player player = findPlayerById(playerId);
-        if (player != null && player == getCurrentPlayer()) {
-            boolean revealed = currentPuzzle.revealLetter(consonant.charAt(0));
-            if (revealed) {
-                // Update score based on number of revealed letters
-                // Keep turn
-            } else {
-                nextTurn();
-            }
-        }
-    }
-
-    public void attemptSolve(String playerId, String guess) {
-        Player player = findPlayerById(playerId);
-        if (player != null && player == getCurrentPlayer()) {
-            if (currentPuzzle.checkSolved(Arrays.asList(guess.split("\\s+")))) {
-                player.updateScore(1000); // Bonus for solving
-                endRound();
-            } else {
-                nextTurn();
-            }
-        }
-    }
-
-    private Player findPlayerById(String playerId) {
-        return players.stream()
-                .filter(p -> p.getPlayerId().equals(playerId))
-                .findFirst()
-                .orElse(null);
+    public int getRound() {
+        return round;
     }
 
     public List<Player> getPlayers() {
         return players;
+    }
+
+    public String getGameStatus() {
+        if (!isActive) {
+            return players.size() < 2 ? "Waiting for more players..." : "Game will start soon...";
+        } else {
+            return "Game in progress";
+        }
     }
 }

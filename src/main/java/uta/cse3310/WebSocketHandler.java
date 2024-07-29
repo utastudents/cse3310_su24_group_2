@@ -1,4 +1,5 @@
 //Handles WebSocket connections and messages, comp error when class name is just websocket.java
+
 package uta.cse3310;
 
 import org.java_websocket.server.WebSocketServer;
@@ -25,18 +26,12 @@ public class WebSocketHandler extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         conns.add(conn);
         System.out.println("New connection from " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
-        // Create or join a game session for the new player
-        Player newPlayer = new Player(conn.getRemoteSocketAddress().toString(), "Player " + conns.size());
-        GameSession session = gameServer.findOrCreateGameSession();
-        session.addPlayer(newPlayer);
-        sendGameStateToPlayer(conn, session);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         conns.remove(conn);
         System.out.println("Closed connection to " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
-        // Remove player from game session
         gameServer.removePlayerFromSession(conn.getRemoteSocketAddress().toString());
     }
 
@@ -48,22 +43,36 @@ public class WebSocketHandler extends WebSocketServer {
             String action = jsonMessage.getString("Action");
             String playerId = conn.getRemoteSocketAddress().toString();
            
-            GameSession session = gameServer.findSessionForPlayer(playerId);
-            if (session != null) {
-                switch (action) {
-                    case "BUY_VOWEL":
-                        session.buyVowel(playerId);
-                        break;
-                    case "SELECT_CONSONANT":
-                        session.selectConsonant(playerId, jsonMessage.getString("Guess"));
-                        break;
-                    case "SOLVE":
-                        session.attemptSolve(playerId, jsonMessage.getString("Guess"));
-                        break;
+            if ("JOIN_GAME".equals(action)) {
+                Player newPlayer = new Player(playerId, "Player " + (gameServer.getPlayerCount() + 1));
+                GameSession session = gameServer.findOrCreateGameSession();
+                session.addPlayer(newPlayer);
+                
+                // Added this so each player knows their playerID
+                JSONObject playerInfo = new JSONObject();
+                playerInfo.put("Action", "PLAYER_INFO");
+                playerInfo.put("PlayerId", playerId);
+                playerInfo.put("PlayerName", newPlayer.getName());
+                conn.send(playerInfo.toString());
+                
+                sendGameStateToAllPlayers(session);
+            } else {
+                GameSession session = gameServer.findSessionForPlayer(playerId);
+                if (session != null) {
+                    switch (action) {
+                        case "BUY_VOWEL":
+                            session.buyVowel(playerId);
+                            break;
+                        case "SELECT_CONSONANT":
+                            session.selectConsonant(playerId, jsonMessage.getString("Guess"));
+                            break;
+                        case "SOLVE":
+                            session.attemptSolve(playerId, jsonMessage.getString("Guess"));
+                            break;
+                    }
+                   
+                    sendGameStateToAllPlayers(session);
                 }
-               
-                // Send updated game state to all players in the session
-                sendGameStateToPlayers(session);
             }
         } catch (JSONException e) {
             System.err.println("Error parsing message: " + e.getMessage());
@@ -83,16 +92,11 @@ public class WebSocketHandler extends WebSocketServer {
         System.out.println("WebSocket server started successfully.");
     }
 
-    private void sendGameStateToPlayers(GameSession session) {
-        JSONObject gameState = new JSONObject();
-        gameState.put("puzzle", session.getCurrentPuzzle().getDisplayedPuzzle());
-        gameState.put("scores", session.getScoreboard().getTopPlayers());
-        gameState.put("currentPlayer", session.getCurrentPlayer().getPlayerId());
-       
+    private void sendGameStateToAllPlayers(GameSession session) {
         for (Player player : session.getPlayers()) {
             WebSocket conn = findConnectionForPlayer(player.getPlayerId());
             if (conn != null) {
-                conn.send(gameState.toString());
+                sendGameStateToPlayer(conn, session);
             }
         }
     }
@@ -100,8 +104,14 @@ public class WebSocketHandler extends WebSocketServer {
     private void sendGameStateToPlayer(WebSocket conn, GameSession session) {
         JSONObject gameState = new JSONObject();
         gameState.put("puzzle", session.getCurrentPuzzle().getDisplayedPuzzle());
-        gameState.put("scores", session.getScoreboard().getTopPlayers());
+        gameState.put("scores", session.getPlayers().stream().map(p -> new JSONObject()
+            .put("name", p.getName())
+            .put("score", p.getScore())
+            .put("playerId", p.getPlayerId())).toArray());
         gameState.put("currentPlayer", session.getCurrentPlayer().getPlayerId());
+        gameState.put("currentStake", session.getCurrentStake());
+        gameState.put("round", session.getRound());
+        gameState.put("gameStatus", session.getGameStatus());
         conn.send(gameState.toString());
     }
 
