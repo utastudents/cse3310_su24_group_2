@@ -1,17 +1,27 @@
 //App.java starts the HTTP and WebSocket servers.
 package uta.cse3310;
 
+import java.io.IOException;
+
 public class App {
     public static void main(String[] args) {
         String httpPortStr = System.getenv("HTTP_PORT");
         int httpPort = (httpPortStr != null) ? Integer.parseInt(httpPortStr) : 9080;
 
-        String websocketPortStr = System.getenv("WEBSOCKET_PORT");
-        int websocketPort = (websocketPortStr != null) ? Integer.parseInt(websocketPortStr) : httpPort + 100;
+        String htmlDir = "src/main/resources"; 
 
-        GameServer gameServer = new GameServer(httpPort, websocketPort);
-        gameServer.start();
+        HttpServer httpServer = new HttpServer(httpPort, htmlDir);
+        try {
+            httpServer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        System.out.println("GameServer started on HTTP port " + httpPort + " and WebSocket port " + websocketPort);
+        int websocketPort = httpPort + 100;
+
+        WebSocketHandler webSocketServer = new WebSocketHandler(websocketPort);
+        webSocketServer.start();
+
+        System.out.println("WebSocket server started on port " + websocketPort);
     }
 }
