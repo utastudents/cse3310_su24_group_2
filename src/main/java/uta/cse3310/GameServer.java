@@ -27,9 +27,15 @@ public class GameServer {
         // to stop the server
     }
 
-    public void createGameSession(int numberOfPlayers) {
-        GameSession session = new GameSession();
-        gameSessions.add(session);
+    public GameSession findOrCreateGameSession() {
+        for (GameSession session : gameSessions) {
+            if (session.getPlayers().size() < 4) {
+                return session;
+            }
+        }
+        GameSession newSession = new GameSession();
+        gameSessions.add(newSession);
+        return newSession;
     }
 
     public void removeGameSession(GameSession session) {
@@ -47,5 +53,28 @@ public class GameServer {
     public List<GameSession> getGameSessions() {
         return gameSessions;
     }
-}
 
+    public GameSession findSessionForPlayer(String playerId) {
+        for (GameSession session : gameSessions) {
+            for (Player player : session.getPlayers()) {
+                if (player.getPlayerId().equals(playerId)) {
+                    return session;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void removePlayerFromSession(String playerId) {
+        GameSession session = findSessionForPlayer(playerId);
+        if (session != null) {
+            Player playerToRemove = session.getPlayers().stream()
+                    .filter(p -> p.getPlayerId().equals(playerId))
+                    .findFirst()
+                    .orElse(null);
+            if (playerToRemove != null) {
+                session.removePlayer(playerToRemove);
+            }
+        }
+    }
+}

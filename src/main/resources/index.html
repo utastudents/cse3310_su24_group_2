@@ -5,43 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TURN OF DESTINY</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        #game-container {
-            margin: 20px auto;
-            max-width: 600px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        #puzzle {
-            font-size: 24px;
-            margin: 20px 0;
-            word-wrap: break-word;
-        }
-        #controls {
-            margin-bottom: 20px;
-        }
-        #controls button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 0 5px;
-        }
-        #scoreboard {
-            margin: 20px 0;
-            padding: 10px;
-            background: #e2e2e2;
-            border-radius: 8px;
-        }
-        #scoreboard div {
-            margin: 5px 0;
-        }
+        /* ... (keep existing styles) ... */
     </style>
 </head>
 <body>
@@ -50,14 +14,41 @@
         <div id="puzzle">Loading puzzle...</div>
         <div id="controls">
             <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
-            <button onclick="sendUserAction('SELECT_CONSONANT', '')">Select Consonant</button>
-            <button onclick="sendUserAction('SOLVE', '')">Solve Puzzle</button>
+            <button onclick="selectConsonant()">Select Consonant</button>
+            <button onclick="attemptSolve()">Solve Puzzle</button>
         </div>
         <div id="scoreboard">Scoreboard </div>
+        <div id="current-player"></div>
     </div>
 
     <script>
-        let currentPlayerIndex = 0; // This should be dynamically updated based on the game state
+        let socket = new WebSocket('ws://localhost:9180'); // Update if needed
+        let playerId = null;
+
+        socket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+
+        socket.onmessage = function(event) {
+            let data = JSON.parse(event.data);
+            if (data.puzzle) {
+                updateWordPuzzle(data.puzzle);
+            }
+            if (data.scores) {
+                updateScoreboard(data.scores);
+            }
+            if (data.currentPlayer) {
+                updateCurrentPlayer(data.currentPlayer);
+            }
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
 
         function updateWordPuzzle(puzzle) {
             document.getElementById('puzzle').textContent = puzzle;
@@ -68,8 +59,26 @@
             scoreboard.innerHTML = 'Scoreboard:<br>';
             scores.forEach(score => {
                 let item = document.createElement('div');
-                item.textContent = `${score.player}: ${score.points}`;
+                item.textContent = `${score.name}: ${score.score}`;
                 scoreboard.appendChild(item);
+            });
+        }
+
+        function updateCurrentPlayer(currentPlayerId) {
+            let currentPlayerDiv = document.getElementById('current-player');
+            if (currentPlayerId === playerId) {
+                currentPlayerDiv.textContent = "It's your turn!";
+                enableControls(true);
+            } else {
+                currentPlayerDiv.textContent = "Waiting for other player...";
+                enableControls(false);
+            }
+        }
+
+        function enableControls(enable) {
+            let buttons = document.querySelectorAll('#controls button');
+            buttons.forEach(button => {
+                button.disabled = !enable;
             });
         }
 
@@ -77,32 +86,26 @@
             let userAction = {
                 Action: action,
                 Guess: guess,
-                PlayerIndex: currentPlayerIndex // Ensure this is updated correctly
+                PlayerId: playerId
             };
             socket.send(JSON.stringify(userAction));
         }
 
-        // Initialize WebSocket and handle messages
-        let socket = new WebSocket('ws://localhost:9180'); // Update if needed
-        socket.onopen = function() {
-            console.log('WebSocket connection established');
-        };
-        socket.onmessage = function(event) {
-            let data = JSON.parse(event.data);
-            if (data.puzzle) {
-                updateWordPuzzle(data.puzzle);
+        function selectConsonant() {
+            let consonant = prompt("Enter a consonant:");
+            if (consonant && consonant.length === 1 && consonant.match(/[bcdfghjklmnpqrstvwxyz]/i)) {
+                sendUserAction('SELECT_CONSONANT', consonant.toUpperCase());
+            } else {
+                alert("Please enter a valid consonant.");
             }
-            if (data.scores) {
-                updateScoreboard(data.scores);
+        }
+
+        function attemptSolve() {
+            let guess = prompt("Enter your solution:");
+            if (guess) {
+                sendUserAction('SOLVE', guess.toUpperCase());
             }
-        };
-        socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-        };
-        socket.onclose = function() {
-            console.log('WebSocket connection closed');
-        };
+        }
     </script>
 </body>
 </html>
-

@@ -25,8 +25,8 @@ public class WordPuzzle {
     public void loadWords(String filePath) {
         try (Stream<String> stream = Files.lines(Paths.get(filePath))) {
             words = stream
-                    .filter(word -> word.length() >= 3 && word.matches("[a-z]+"))
-                    .collect(Collectors.toList());
+                .filter(word -> word.length() >= 3 && word.matches("[a-z]+"))
+                .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +53,9 @@ public class WordPuzzle {
     }
 
     public boolean checkSolved(List<String> guessedWords) {
-        return guessedWords.stream().allMatch(words::contains);
+        String currentPuzzle = getDisplayedPuzzle().replaceAll("[^a-zA-Z ]", "").toLowerCase();
+        String guessedPuzzle = String.join(" ", guessedWords).toLowerCase();
+        return currentPuzzle.equals(guessedPuzzle);
     }
 
     public String getDisplayedPuzzle() {
@@ -64,4 +66,3 @@ public class WordPuzzle {
         return revealedLetters;
     }
 }
-
