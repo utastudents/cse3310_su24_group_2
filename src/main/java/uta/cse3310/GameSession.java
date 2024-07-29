@@ -1,83 +1,62 @@
 // GameSession manags a single game; players, rounds
-
 package uta.cse3310;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class GameSession {
     private List<Player> players;
-    private boolean isActive;
-    private WordPuzzle currentPuzzle;
-    private int currentTurnIndex;
-    private int round;
-    private Scoreboard scoreboard;
-
-    public GameSession() {
-        this.players = new ArrayList<>();
-        this.isActive = false;
-        this.currentPuzzle = new WordPuzzle();
-        this.currentTurnIndex = 0;
-        this.round = 1;
-        this.scoreboard = new Scoreboard();
-    }
+    private int currentPlayerIndex;
+    private int rounds;
+    private WordPuzzle wordPuzzle;
 
     public GameSession(int numberOfPlayers) {
-        //TODO Auto-generated constructor stub
+        this.players = new ArrayList<>();
+        this.currentPlayerIndex = 0;
+        this.rounds = 0;
+        this.wordPuzzle = new WordPuzzle();
+        for (int i = 0; i < numberOfPlayers; i++) {
+            players.add(new Player("Player " + (i + 1)));
+        }
     }
 
     public void addPlayer(Player player) {
-        if (!isActive) {
+        if (players.size() <= 4) {
             players.add(player);
+        } else {
+            throw new IllegalStateException("Maximum number of players reached.");
         }
-    }
-
-    public void removePlayer(Player player) {
-        players.remove(player);
     }
 
     public void startGame() {
-        if (players.size() >= 2 && players.size() <= 4) {
-            isActive = true;
-            startRound();
-        }
-    }
-
-    private void startRound() {
-        currentPuzzle.generatePuzzle(2);
-        currentTurnIndex = 0;
-        // Notify all players about the new round
-    }
-
-    public void endRound() {
-        round++;
-        if (round > 3) {
-            endGame();
-        } else {
-            startRound();
-        }
-    }
-
-    public void endGame() {
-        isActive = false;
-        // Update scoreboard and notify players
+        // Initialize game logic
+        wordPuzzle.selectWords();
     }
 
     public void nextTurn() {
-        currentTurnIndex = (currentTurnIndex + 1) % players.size();
-        // Notify players about the next turn
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        // Notify players of the next turn
     }
 
     public Player getCurrentPlayer() {
-        return players.get(currentTurnIndex);
+        return players.get(currentPlayerIndex);
     }
 
-    public WordPuzzle getCurrentPuzzle() {
-        return currentPuzzle;
+    public void solvePuzzle(String attempt) {
+        if (wordPuzzle.isCorrect(attempt)) {
+            // Handle correct attempt
+        } else {
+            // Handle incorrect attempt
+        }
     }
 
-    public Scoreboard getScoreboard() {
-        return scoreboard;
+    public void endRound() {
+        rounds++;
+        if (rounds >= 3) {
+            // End game logic
+        } else {
+            // Start new round
+        }
     }
 }
-
