@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class WebSocketHandlerTest {
+class WebsocketTest {
 
     @Mock
     private GameServer mockGameServer;
@@ -22,20 +22,18 @@ class WebSocketHandlerTest {
     @Mock
     private WebSocket mockConn;
 
-    private WebSocketHandler handler;
+    private Websocket websocket;
 
     @BeforeEach
     void setUp() {
-        handler = new WebSocketHandler(8080, mockGameServer);
-        // Remove this line as it's not necessary for all tests
-        // when(mockConn.getRemoteSocketAddress()).thenReturn(new InetSocketAddress("localhost", 8080));
+        websocket = new Websocket(8080, mockGameServer);
     }
 
     @Test
     void testOnOpen() {
         ClientHandshake mockHandshake = mock(ClientHandshake.class);
         when(mockConn.getRemoteSocketAddress()).thenReturn(new InetSocketAddress("localhost", 8080));
-        handler.onOpen(mockConn, mockHandshake);
+        websocket.onOpen(mockConn, mockHandshake);
         verify(mockConn).getRemoteSocketAddress();
     }
 
@@ -47,7 +45,7 @@ class WebSocketHandlerTest {
         when(mockConn.getRemoteSocketAddress()).thenReturn(new InetSocketAddress("localhost", 8080));
 
         String message = new JSONObject().put("Action", "JOIN_GAME").toString();
-        handler.onMessage(mockConn, message);
+        websocket.onMessage(mockConn, message);
 
         verify(mockGameServer).findOrCreateGameSession();
         verify(mockSession).addPlayer(any(Player.class));
@@ -57,14 +55,14 @@ class WebSocketHandlerTest {
     @Test
     void testOnClose() {
         when(mockConn.getRemoteSocketAddress()).thenReturn(new InetSocketAddress("localhost", 8080));
-        handler.onClose(mockConn, 1000, "Test reason", true);
+        websocket.onClose(mockConn, 1000, "Test reason", true);
         verify(mockGameServer).removePlayerFromSession(anyString());
     }
 
     @Test
     void testOnError() {
         Exception mockException = new Exception("Test exception");
-        handler.onError(mockConn, mockException);
+        websocket.onError(mockConn, mockException);
         
     }
 }

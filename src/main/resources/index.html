@@ -75,7 +75,7 @@
     <script>
         let httpPort = window.location.port || 80;
         let wsPort = parseInt(httpPort) + 100;
-        let socket = new WebSocket(`ws://${window.location.hostname}:${wsPort}`);
+        let socket = new WebSocket('ws://su24.cse3310.org:9102');{window.location.hostname}:${wsPort}`);
         let playerId = null;
         let playerName = null;
         let latencies = [];

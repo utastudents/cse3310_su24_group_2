@@ -1,4 +1,4 @@
-//Handles WebSocket connections and messages, comp error when class name is just websocket.java
+//Handles WebSocket connections and messages, 
 
 package uta.cse3310;
 
@@ -13,11 +13,11 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WebSocketHandler extends WebSocketServer {
+public class Websocket extends WebSocketServer {
     private static Set<WebSocket> conns = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private GameServer gameServer;
 
-    public WebSocketHandler(int port, GameServer gameServer) {
+    public Websocket(int port, GameServer gameServer) {
         super(new InetSocketAddress(port));
         this.gameServer = gameServer;
     }
@@ -48,7 +48,6 @@ public class WebSocketHandler extends WebSocketServer {
                 GameSession session = gameServer.findOrCreateGameSession();
                 session.addPlayer(newPlayer);
                 
-                // Added this so each player knows their playerID
                 JSONObject playerInfo = new JSONObject();
                 playerInfo.put("Action", "PLAYER_INFO");
                 playerInfo.put("PlayerId", playerId);
