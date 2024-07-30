@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f4f4f4;
+            background-color: rgb(250, 247, 247);;
             margin: 0;
             padding: 0;
         }
@@ -54,7 +54,7 @@
         <div id="game-status"></div>
         <div id="puzzle">Loading</div>
         <div id="controls">
-            <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
+            <button onclick="buyVowel()">Buy Vowel</button>
             <div class="input-group">
                 <input type="text" id="consonant-input" maxlength="1" placeholder="Enter consonant">
                 <button onclick="selectConsonant()">Select Consonant</button>
@@ -73,13 +73,15 @@
     </div>
 
     <script>
-        let socket = new WebSocket('ws://localhost:9180');
+        let httpPort = window.location.port || 80;
+        let wsPort = parseInt(httpPort) + 100;
+        let socket = new WebSocket(`ws://${window.location.hostname}:${wsPort}`);
         let playerId = null;
         let playerName = null;
         let latencies = [];
 
         socket.onopen = function() {
-            console.log('WebSocket connection established');
+            console.log('WebSocket connection opened');
             socket.send(JSON.stringify({Action: "JOIN_GAME"}));
             console.log('Sent JOIN_GAME action');
         };
@@ -101,13 +103,13 @@
         };
 
         socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            showFeedback('Connection error. Please refresh the page.');
+            console.error('WebSocket connection failed:', error);
+            showFeedback('Offline!.');
         };
 
         socket.onclose = function() {
             console.log('WebSocket connection closed');
-            showFeedback('Connection closed. Please refresh the page.');
+            showFeedback('Offline!.');
         };
 
         function updateGameState(data) {
@@ -158,7 +160,7 @@
                         break;
                     }
                 }
-                currentPlayerDiv.textContent = `Waiting for ${currentPlayerName}'s turn...`;
+                currentPlayerDiv.textContent = `wait for ${currentPlayerName} to play...`;
                 enableControls(false);
             }
         }
@@ -180,6 +182,10 @@
             socket.send(JSON.stringify(userAction));
         }
 
+        function buyVowel() {
+            sendUserAction('BUY_VOWEL', '');
+        }
+
         function selectConsonant() {
             let consonant = document.getElementById('consonant-input').value.toUpperCase();
             if (consonant && consonant.length === 1 && consonant.match(/[BCDFGHJKLMNPQRSTVWXYZ]/)) {
@@ -187,7 +193,7 @@
                 document.getElementById('consonant-input').value = '';
                 showFeedback('');
             } else {
-                showFeedback("Please enter a valid consonant.");
+                showFeedback("Not valid consonant.");
             }
         }
 
