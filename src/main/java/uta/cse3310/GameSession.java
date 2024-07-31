@@ -96,13 +96,13 @@ public class GameSession {
         }
     }
 
-    private void nextTurn() {
+    void nextTurn() {
         currentTurnIndex = (currentTurnIndex + 1) % players.size();
         selectStake();
         notifyPlayers();
     }
 
-    private void endRound() {
+    void endRound() {
         round++;
         if (round > 3) {
             endGame();
@@ -117,7 +117,7 @@ public class GameSession {
         // Notify players of the winner
     }
 
-    private Player determineWinner() {
+    Player determineWinner() {
         return players.stream().max((p1, p2) -> p1.getScore() - p2.getScore()).orElse(null);
     }
 
