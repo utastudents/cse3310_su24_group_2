@@ -1,4 +1,5 @@
 //GameServer controls the  server; sessions and scores.
+
 package uta.cse3310;
 
 import java.util.List;
@@ -9,22 +10,22 @@ public class GameServer {
     private int wsPort;
     private List<GameSession> gameSessions;
     private Scoreboard scoreboard;
-    private WebSocketHandler webSocketHandler;
+    private Websocket websocket;
 
     public GameServer(int httpPort, int wsPort) {
         this.httpPort = httpPort;
         this.wsPort = wsPort;
         this.gameSessions = new ArrayList<>();
         this.scoreboard = new Scoreboard();
-        this.webSocketHandler = new WebSocketHandler(wsPort, this);
+        this.websocket = new Websocket(wsPort, this);
     }
 
     public void start() {
-        webSocketHandler.start();
+        websocket.start();
     }
 
     public void stop() {
-
+        // to stop the server
     }
 
     public GameSession findOrCreateGameSession() {

@@ -18,7 +18,15 @@ public class WordPuzzle {
         words = new ArrayList<>();
         displayedPuzzle = "";
         currentPuzzle = "";
-        loadWords("src/main/resources/words.txt");
+        loadWords(getWordSource());
+    }
+
+    private String getWordSource() {
+        String testGrid = System.getenv("TEST_GRID");
+        if (testGrid != null) {
+            return "src/main/resources/test_words_" + testGrid + ".txt";
+        }
+        return "src/main/resources/words.txt";
     }
 
     public void loadWords(String filePath) {

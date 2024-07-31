@@ -1,5 +1,3 @@
-
-
 package uta.cse3310;
 
 import java.util.ArrayList;
@@ -14,7 +12,7 @@ public class GameSession {
     private int round;
     private int currentStake;
     private static final int VOWEL_COST = 250;
-    private static final int[] STAKES = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 0, -1}; 
+    private static final int[] STAKES = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 0, -1}; // 0 for Free Spin, -1 for Bankrupt
 
     public GameSession() {
         this.players = new ArrayList<>();
@@ -63,11 +61,10 @@ public class GameSession {
         Player player = getCurrentPlayer();
         if (player.getPlayerId().equals(playerId) && player.getScore() >= VOWEL_COST) {
             player.updateScore(-VOWEL_COST);
-            // Logic to let the player choose a vowel and reveal it
-            String vowels = "aeiou";
+            String vowels = "AEIOU";
             char vowel = vowels.charAt(new Random().nextInt(vowels.length()));
             if (currentPuzzle.revealLetter(vowel)) {
-
+                // Vowel was revealed, keep the turn
             } else {
                 nextTurn();
             }
@@ -129,7 +126,7 @@ public class GameSession {
     }
 
     private void notifyPlayers() {
-        // This  will be called by WebSocketHandler(websocket) to send updates to players
+        
     }
 
     public Player getCurrentPlayer() {
