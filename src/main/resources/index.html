@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: rgb(250, 247, 247);;
+            background-color: rgb(250, 247, 247);
             margin: 0;
             padding: 0;
         }
@@ -52,16 +52,17 @@
         <h1>Turn of Destiny</h1>
         <div id="player-info"></div>
         <div id="game-status"></div>
-        <div id="puzzle">Loading</div>
+        <div id="puzzle">Loading puzzle...</div>
         <div id="controls">
-            <button onclick="buyVowel()">Buy Vowel</button>
+            <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
             <div class="input-group">
                 <input type="text" id="consonant-input" maxlength="1" placeholder="Enter consonant">
-                <button onclick="selectConsonant()">Select Consonant</button>
+                <button onclick="selectConsonant()">Play
+</button>
             </div>
             <div class="input-group">
                 <input type="text" id="solve-input" placeholder="Enter solution">
-                <button onclick="attemptSolve()">Solve Puzzle</button>
+                <button onclick="attemptSolve()">Solve </button>
             </div>
         </div>
         <div id="feedback"></div>
@@ -69,19 +70,17 @@
         <div id="current-player"></div>
         <div id="current-stake"></div>
         <div id="round"></div>
-        <div id="latency"> Latency: -- ms</div>
+        <div id="latency"> Latency: </div>
     </div>
 
     <script>
-        let httpPort = window.location.port || 80;
-        let wsPort = parseInt(httpPort) + 100;
-        let socket = new WebSocket('ws://su24.cse3310.org:9102');{window.location.hostname}:${wsPort}`);
+        let socket = new WebSocket('ws://127.0.0.1:9102');
         let playerId = null;
         let playerName = null;
         let latencies = [];
 
         socket.onopen = function() {
-            console.log('WebSocket connection opened');
+            console.log('WebSocket connection established');
             socket.send(JSON.stringify({Action: "JOIN_GAME"}));
             console.log('Sent JOIN_GAME action');
         };
@@ -103,19 +102,21 @@
         };
 
         socket.onerror = function(error) {
-            console.error('WebSocket connection failed:', error);
-            showFeedback('Offline!.');
+            console.error('WebSocket error:', error);
+            showError('Connection error!.');
         };
 
-        socket.onclose = function() {
-            console.log('WebSocket connection closed');
-            showFeedback('Offline!.');
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed:', event.code, event.reason);
+            showError('Connection closed!.');
         };
 
         function updateGameState(data) {
-            console.log('Updating game state with:', data);
+            console.log('Updating game state:', data);
             if (data.puzzle) {
                 document.getElementById('puzzle').textContent = data.puzzle;
+            } else {
+                console.warn('No puzzle data received');
             }
             if (data.scores) {
                 updateScoreboard(data.scores);
@@ -160,7 +161,7 @@
                         break;
                     }
                 }
-                currentPlayerDiv.textContent = `wait for ${currentPlayerName} to play...`;
+                currentPlayerDiv.textContent = `It's is ${currentPlayerName}'s turn...`;
                 enableControls(false);
             }
         }
@@ -182,10 +183,6 @@
             socket.send(JSON.stringify(userAction));
         }
 
-        function buyVowel() {
-            sendUserAction('BUY_VOWEL', '');
-        }
-
         function selectConsonant() {
             let consonant = document.getElementById('consonant-input').value.toUpperCase();
             if (consonant && consonant.length === 1 && consonant.match(/[BCDFGHJKLMNPQRSTVWXYZ]/)) {
@@ -193,7 +190,7 @@
                 document.getElementById('consonant-input').value = '';
                 showFeedback('');
             } else {
-                showFeedback("Not valid consonant.");
+                showFeedback("Try again! not a valid consonant.");
             }
         }
 
@@ -211,13 +208,32 @@
         function updateLatency() {
             if (latencies.length > 0) {
                 let avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-                document.getElementById('latency').textContent = `Average Latency: ${avgLatency.toFixed(2)} ms`;
+                document.getElementById('latency').textContent = ` Latency: ${avgLatency.toFixed(2)} `;
             }
         }
 
         function showFeedback(message) {
             document.getElementById('feedback').textContent = message;
         }
+
+        function showError(message) {
+            document.getElementById('feedback').textContent = message;
+            document.getElementById('feedback').style.color = 'red';
+        }
+
+        function testWithMockedData() {
+            updateGameState({
+                puzzle: "_ _ _ _ _   _ _ _ _ _ _",
+                scores: [{name: "Player1", score: 100, playerId: "1"}, {name: "Player2", score: 150, playerId: "2"}],
+                currentPlayer: "1",
+                currentStake: 200,
+                round: 1,
+                gameStatus: "In Progress"
+            });
+        }
+
+        
+        setTimeout(testWithMockedData, 5000);
     </script>
 </body>
 </html>
