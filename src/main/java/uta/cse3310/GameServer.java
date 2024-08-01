@@ -19,6 +19,7 @@ public class GameServer {
         this.httpPort = httpPort;
         this.wsPort = wsPort;
         this.lobbies = new HashMap<>();
+        this.scoreboard = new Scoreboard();  // Initialize scoreboard
         this.websocket = new Websocket(wsPort, this);
     }
 

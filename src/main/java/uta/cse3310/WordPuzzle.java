@@ -14,11 +14,11 @@ public class WordPuzzle {
 private String displayedPuzzle;
  private String currentPuzzle;
 
- public WordPuzzle() {
- words = new ArrayList<>();
-displayedPuzzle = "";
- currentPuzzle = "";
-loadWords(getWordSource());
+     public WordPuzzle() {
+        words = new ArrayList<>();
+        displayedPuzzle = "";
+        currentPuzzle = "";
+        loadWords(getWordSource());
 }
 
  private String getWordSource() {
