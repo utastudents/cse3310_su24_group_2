@@ -6,8 +6,8 @@ import java.net.InetSocketAddress;
 
 class WebsocketTest {
 
-@Test
-void testWebsocketCreationAndAddress() {
+  @Test
+  void testWebsocketCreationAndAddress() {
     int port = 8081;
     GameServer gameServer = new GameServer(8080, port);
     Websocket websocket = new Websocket(port, gameServer);
