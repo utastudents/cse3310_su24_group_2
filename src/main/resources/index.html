@@ -1,239 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TURN OF DESTINY</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: rgb(250, 247, 247);
-            margin: 0;
-            padding: 0;
-        }
-        #game-container {
-            margin: 20px auto;
-            max-width: 600px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        #puzzle {
-            font-size: 24px;
-            margin: 20px 0;
-            word-wrap: break-word;
-        }
-        #controls {
-            margin-bottom: 20px;
-        }
-        #controls button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 0 5px;
-        }
-        #scoreboard, #current-player, #current-stake, #round, #latency, #player-info, #game-status, #feedback {
-            margin: 10px 0;
-        }
-        .input-group {
-            margin: 10px 0;
-        }
-        .input-group input {
-            margin-right: 5px;
-        }
-        #feedback {
-            color: red;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TURN OF DESTINY</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+text-align: center;
+background-color: rgb(250, 247, 247);
+margin: 0;
+padding: 0;
+}
+#game-container {
+margin: 20px auto;
+max-width: 600px;
+padding: 20px;
+background: #fff;
+border-radius: 8px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+#puzzle {
+font-size: 24px;
+margin: 20px 0;
+word-wrap: break-word;
+}
+#controls {
+margin-bottom: 20px;
+}
+#controls button {
+padding: 10px 20px;
+font-size: 16px;
+margin: 0 5px;
+}
+#scoreboard, #current-player, #current-stake, #round, #latency, #player-info, #game-status, #feedback {
+margin: 10px 0;
+}
+.input-group {
+margin: 10px 0;
+ }
+.input-group input {
+margin-right: 5px;
+}
+#feedback {
+color: red;
+}
+#lobby-container {
+margin-bottom: 20px;
+}
+#lobby-list {
+list-style-type: none;
+padding: 0;
+}
+#lobby-list li {
+cursor: pointer;
+padding: 5px;
+border: 1px solid #ddd;
+margin: 5px 0;
+}
+</style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>Turn of Destiny</h1>
-        <div id="player-info"></div>
-        <div id="game-status"></div>
-        <div id="puzzle">Loading puzzle...</div>
-        <div id="controls">
-            <button onclick="sendUserAction('BUY_VOWEL', '')">Buy Vowel</button>
-            <div class="input-group">
-                <input type="text" id="consonant-input" maxlength="1" placeholder="Enter consonant">
-                <button onclick="selectConsonant()">Play
-</button>
-            </div>
-            <div class="input-group">
-                <input type="text" id="solve-input" placeholder="Enter solution">
-                <button onclick="attemptSolve()">Solve </button>
-            </div>
-        </div>
-        <div id="feedback"></div>
-        <div id="scoreboard">Scoreboard </div>
-        <div id="current-player"></div>
-        <div id="current-stake"></div>
-        <div id="round"></div>
-        <div id="latency"> Latency: </div>
-    </div>
+<div id="game-container">
+<h1>Turn of Destiny</h1>
+<div id="lobby-container">
+<input type="text" id="lobby-id-input" placeholder="Enter lobby ID">
+<button onclick="createLobby()">Create Lobby</button>
+<button onclick="getLobbies()">Refresh Lobbies</button>
+<h3>Available Lobbies:</h3>
+<ul id="lobby-list"></ul>
+</div>
+<div id="player-info"></div>
+<div id="game-status"></div>
+<div id="controls">
+<button onclick="buyVowel()">Buy Vowel</button>
+<div class="input-group">
+<input type="text" id="consonant-input" maxlength="1" placeholder="Enter consonant">
+<button onclick="selectConsonant()">Play</button>
+</div>
+<div class="input-group">
+<input type="text" id="solve-input" placeholder="Enter solution">
+<button onclick="attemptSolve()">Solve </button>
+</div>
+</div>
+<div id="feedback"></div>
+<div id="scoreboard">Scoreboard </div>
+<div id="current-player"></div>
+<div id="current-stake"></div>
+<div id="round"></div>
+<div id="latency"> Latency: -- ms</div>
+</div>
 
-    <script>
-        let socket = new WebSocket('ws://127.0.0.1:9102');
-        let playerId = null;
-        let playerName = null;
-        let latencies = [];
+<script>
+let socket = new WebSocket('ws://localhost:9102');
+let playerId = null;
+let playerName = null;
+let latencies = [];
 
-        socket.onopen = function() {
-            console.log('WebSocket connection established');
-            socket.send(JSON.stringify({Action: "JOIN_GAME"}));
-            console.log('Sent JOIN_GAME action');
-        };
+socket.onopen = function() {
+console.log('WebSocket connection succesful');
+getLobbies();
+};
 
-        socket.onmessage = function(event) {
-            console.log('Received message:', event.data);
-            let data = JSON.parse(event.data);
-            
-            if (data.Action === "PLAYER_INFO") {
-                playerId = data.PlayerId;
-                playerName = data.PlayerName;
-                document.getElementById('player-info').textContent = `You are ${playerName}`;
-                console.log('Received PLAYER_INFO:', playerName, playerId);
-            } else {
-                console.log('Updating game state:', data);
-                updateGameState(data);
-                updateLatency();
-            }
-        };
+socket.onmessage = function(event) {
+console.log('Received message:', event.data);
+let data = JSON.parse(event.data);
+ 
+switch(data.Action) {
+case "LOBBY_LIST":
+updateLobbyList(data.Lobbies);
+break;
+case "PLAYER_INFO":
+playerId = data.PlayerId;
+playerName = data.PlayerName;
+document.getElementById('player-info').textContent = `You are ${playerName}`;
+break;
+case "GAME_STATE":
+updateGameState(data);
+break;
+case "ERROR":
+showFeedback(data.Message);
+break;
+}
+};
 
-        socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            showError('Connection error!.');
-        };
+socket.onerror = function(error) {
+console.error('WebSocket error', error);
+showFeedback('Connection error');
+};
 
-        socket.onclose = function(event) {
-            console.log('WebSocket connection closed:', event.code, event.reason);
-            showError('Connection closed!.');
-        };
+socket.onclose = function() {
+console.log('WebSocket connection closed');
+showFeedback('Connection closed. Please refresh the page.');
+};
 
-        function updateGameState(data) {
-            console.log('Updating game state:', data);
-            if (data.puzzle) {
-                document.getElementById('puzzle').textContent = data.puzzle;
-            } else {
-                console.warn('No puzzle data received');
-            }
-            if (data.scores) {
-                updateScoreboard(data.scores);
-            }
-            if (data.currentPlayer) {
-                updateCurrentPlayer(data.currentPlayer);
-            }
-            if (data.currentStake) {
-                document.getElementById('current-stake').textContent = `Current Stake: $${data.currentStake}`;
-            }
-            if (data.round) {
-                document.getElementById('round').textContent = `Round: ${data.round}`;
-            }
-            if (data.gameStatus) {
-                document.getElementById('game-status').textContent = data.gameStatus;
-            }
-            
-            enableControls(data.currentPlayer === playerId);
-        }
+function createLobby() {
+let lobbyId = document.getElementById('lobby-id-input').value;
+if (lobbyId) {
+socket.send(JSON.stringify({Action: "CREATE_LOBBY", LobbyId: lobbyId}));
+} else {
+showFeedback("Please enter a lobby ID");
+}
+}
 
-        function updateScoreboard(scores) {
-            let scoreboard = document.getElementById('scoreboard');
-            scoreboard.innerHTML = 'Scoreboard:<br>';
-            scores.forEach(score => {
-                let item = document.createElement('div');
-                item.textContent = `${score.name}: $${score.score}`;
-                item.dataset.playerId = score.playerId;
-                scoreboard.appendChild(item);
-            });
-        }
+function joinLobby(lobbyId) {
+socket.send(JSON.stringify({Action: "JOIN_LOBBY", LobbyId: lobbyId}));
+}
 
-        function updateCurrentPlayer(currentPlayerId) {
-            let currentPlayerDiv = document.getElementById('current-player');
-            if (currentPlayerId === playerId) {
-                currentPlayerDiv.textContent = "It's your turn!";
-                enableControls(true);
-            } else {
-                let currentPlayerName = "Another player";
-                for (let score of document.getElementById('scoreboard').children) {
-                    if (score.dataset.playerId === currentPlayerId) {
-                        currentPlayerName = score.textContent.split(':')[0];
-                        break;
-                    }
-                }
-                currentPlayerDiv.textContent = `It's is ${currentPlayerName}'s turn...`;
-                enableControls(false);
-            }
-        }
+function getLobbies() {
+socket.send(JSON.stringify({Action: "GET_LOBBIES"}));
+}
 
-        function enableControls(enable) {
-            let buttons = document.querySelectorAll('#controls button');
-            let inputs = document.querySelectorAll('#controls input');
-            buttons.forEach(button => button.disabled = !enable);
-            inputs.forEach(input => input.disabled = !enable);
-        }
+function updateLobbyList(lobbies) {
+let lobbyList = document.getElementById('lobby-list');
+lobbyList.innerHTML = '';
+lobbies.forEach(lobby => {
+let li = document.createElement('li');
+li.textContent = lobby;
+li.onclick = () => joinLobby(lobby);
+lobbyList.appendChild(li);
+});
+}
 
-        function sendUserAction(action, guess) {
-            let userAction = {
-                Action: action,
-                Guess: guess,
-                PlayerId: playerId
-            };
-            console.log('Sending user action:', userAction);
-            socket.send(JSON.stringify(userAction));
-        }
+function updateGameState(data) {
+if (data.puzzle) {
+document.getElementById('puzzle').textContent = data.puzzle;
+}
+if (data.scores) {
+updateScoreboard(data.scores);
+}
+if (data.currentPlayer) {
+updateCurrentPlayer(data.currentPlayer);
+}
+if (data.currentStake) {
+document.getElementById('current-stake').textContent = `Current Stake: $${data.currentStake}`;
+}
+if (data.round) {
+document.getElementById('round').textContent = `Round: ${data.round}`;
+}
+if (data.gameStatus) {
+document.getElementById('game-status').textContent = data.gameStatus;
+}
+ 
+enableControls(data.currentPlayer === playerId);
+}
 
-        function selectConsonant() {
-            let consonant = document.getElementById('consonant-input').value.toUpperCase();
-            if (consonant && consonant.length === 1 && consonant.match(/[BCDFGHJKLMNPQRSTVWXYZ]/)) {
-                sendUserAction('SELECT_CONSONANT', consonant);
-                document.getElementById('consonant-input').value = '';
-                showFeedback('');
-            } else {
-                showFeedback("Try again! not a valid consonant.");
-            }
-        }
+function updateScoreboard(scores) {
+let scoreboard = document.getElementById('scoreboard');
+scoreboard.innerHTML = 'Scoreboard:<br>';
+scores.forEach(score => {
+let item = document.createElement('div');
+item.textContent = `${score.name}: $${score.score}`;
+item.dataset.playerId = score.playerId;
+scoreboard.appendChild(item);
+});
+}
 
-        function attemptSolve() {
-            let guess = document.getElementById('solve-input').value.toUpperCase();
-            if (guess) {
-                sendUserAction('SOLVE', guess);
-                document.getElementById('solve-input').value = '';
-                showFeedback('');
-            } else {
-                showFeedback("Please enter a solution to guess.");
-            }
-        }
+function updateCurrentPlayer(currentPlayerId) {
+let currentPlayerDiv = document.getElementById('current-player');
+if (currentPlayerId === playerId) {
+currentPlayerDiv.textContent = "It's your turn!";
+enableControls(true);
+} else {
+let currentPlayerName = "Another player";
+for (let score of document.getElementById('scoreboard').children) {
+if (score.dataset.playerId === currentPlayerId) {
+currentPlayerName = score.textContent.split(':')[0];
+break;
+}
+}
+currentPlayerDiv.textContent = `it's is ${currentPlayerName}'s turn...`;
+enableControls(false);
+}
+}
 
-        function updateLatency() {
-            if (latencies.length > 0) {
-                let avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-                document.getElementById('latency').textContent = ` Latency: ${avgLatency.toFixed(2)} `;
-            }
-        }
+function enableControls(enable) {
+let buttons = document.querySelectorAll('#controls button');
+let inputs = document.querySelectorAll('#controls input');
+buttons.forEach(button => button.disabled = !enable);
+inputs.forEach(input => input.disabled = !enable);
+}
 
-        function showFeedback(message) {
-            document.getElementById('feedback').textContent = message;
-        }
+function buyVowel() {
+socket.send(JSON.stringify({Action: "BUY_VOWEL", PlayerId: playerId}));
+}
 
-        function showError(message) {
-            document.getElementById('feedback').textContent = message;
-            document.getElementById('feedback').style.color = 'red';
-        }
+function selectConsonant() {
+let consonant = document.getElementById('consonant-input').value.toUpperCase();
+if (consonant && consonant.length === 1 && consonant.match(/[BCDFGHJKLMNPQRSTVWXYZ]/)) {
+socket.send(JSON.stringify({Action: "SELECT_CONSONANT", PlayerId: playerId, Guess: consonant}));
+document.getElementById('consonant-input').value = '';
+} else {
+showFeedback("Please enter a valid consonant.");
+}
+}
 
-        function testWithMockedData() {
-            updateGameState({
-                puzzle: "_ _ _ _ _   _ _ _ _ _ _",
-                scores: [{name: "Player1", score: 100, playerId: "1"}, {name: "Player2", score: 150, playerId: "2"}],
-                currentPlayer: "1",
-                currentStake: 200,
-                round: 1,
-                gameStatus: "In Progress"
-            });
-        }
+function attemptSolve() {
+let guess = document.getElementById('solve-input').value.toUpperCase();
+if (guess) {
+socket.send(JSON.stringify({Action: "SOLVE", PlayerId: playerId, Guess: guess}));
+document.getElementById('solve-input').value = '';
+} else {
+showFeedback("Please Enter a solution to guess.");
+}
+}
 
-        
-        setTimeout(testWithMockedData, 5000);
-    </script>
+function showFeedback(message) {
+document.getElementById('feedback').textContent = message;
+}
+
+</script>
+
 </body>
-</html>
+
+</html> }
