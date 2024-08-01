@@ -4,19 +4,21 @@ package uta.cse3310;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class GameServer {
     private int httpPort;
     private int wsPort;
-    private List<GameSession> gameSessions;
+    private Map<String, GameSession> lobbies;
     private Scoreboard scoreboard;
     private Websocket websocket;
 
     public GameServer(int httpPort, int wsPort) {
         this.httpPort = httpPort;
         this.wsPort = wsPort;
-        this.gameSessions = new ArrayList<>();
-        this.scoreboard = new Scoreboard();
+        this.lobbies = new HashMap<>();
         this.websocket = new Websocket(wsPort, this);
     }
 
@@ -24,62 +26,72 @@ public class GameServer {
         websocket.start();
     }
 
-    public void stop() {
-        // to stop the server
-    }
-
-    public GameSession findOrCreateGameSession() {
-        for (GameSession session : gameSessions) {
-            if (session.getPlayers().size() < 4) {
-                return session;
-            }
+    public void createLobby(String lobbyId) {
+        if (!lobbies.containsKey(lobbyId)) {
+            lobbies.put(lobbyId, new GameSession(lobbyId));
         }
-        GameSession newSession = new GameSession();
-        gameSessions.add(newSession);
-        return newSession;
     }
 
-    public void removeGameSession(GameSession session) {
-        gameSessions.remove(session);
-    }
-
-    public void updateScoreboard(Player player) {
-        scoreboard.updateScoreboard(player);
-    }
-
-    public List<Player> getTopPlayers() {
-        return scoreboard.getTopPlayers();
-    }
-
-    public List<GameSession> getGameSessions() {
-        return gameSessions;
-    }
-
-    public GameSession findSessionForPlayer(String playerId) {
-        for (GameSession session : gameSessions) {
-            for (Player player : session.getPlayers()) {
-                if (player.getPlayerId().equals(playerId)) {
-                    return session;
-                }
-            }
+    public GameSession joinLobby(String lobbyId, Player player) {
+        GameSession session = lobbies.get(lobbyId);
+        if (session != null && session.getPlayers().size() < 4) {
+            session.addPlayer(player);
+            return session;
         }
         return null;
     }
 
-    public void removePlayerFromSession(String playerId) {
-        GameSession session = findSessionForPlayer(playerId);
-        if (session != null) {
-            Player playerToRemove = session.getPlayers().stream()
-                    .filter(p -> p.getPlayerId().equals(playerId))
-                    .findFirst()
-                    .orElse(null);
-            if (playerToRemove != null) {
-                session.removePlayer(playerToRemove);
-            }
-        }
+    public List<String> getAvailableLobbies() {
+        return lobbies.entrySet().stream()
+                .filter(entry -> entry.getValue().getPlayers().size() < 4)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
+public void removePlayerFromSession(String playerId) {
+for (GameSession session : lobbies.values()) {
+Player playerToRemove = session.getPlayers().stream()
+.filter(p -> p.getPlayerId().equals(playerId))
+.findFirst()
+.orElse(null);
+if (playerToRemove != null) {
+session.removePlayer(playerToRemove);
+break;
+ }
+ }
+}
+
+
+
+    public GameSession findSessionForPlayer(String playerId) {
+for (GameSession session : lobbies.values()) {
+if (session.getPlayers().stream().anyMatch(p -> p.getPlayerId().equals(playerId))) {
+return session;
+}
+}
+return null;
+}
+
+
+    public void updateScoreboard(Player player) {
+scoreboard.updateScoreboard(player);
+}
+
+   
+
+    public List<Player> getTopPlayers() {
+return scoreboard.getTopPlayers();
+ }
+
+  
+
     public int getPlayerCount() {
-        return gameSessions.stream().mapToInt(session -> session.getPlayers().size()).sum();
-    }
+return lobbies.values().stream().mapToInt(session -> session.getPlayers().size()).sum();
+ }
+
+ 
+
+    public Websocket getWebsocket() {
+return websocket;
+}
 }
